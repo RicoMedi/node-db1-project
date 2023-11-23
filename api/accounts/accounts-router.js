@@ -12,19 +12,50 @@ router.get('/', async (req, res, next) => {
 })
 
 router.get('/:id', md.checkAccountId, async(req, res, next) => {
-res.json(req.account)
+try{ 
+  const account = await Account.getById(req.params.id)
+  res.json(account)
+}catch(err){
+  next(err)
+}
 })
 
-router.post('/', md.checkAccountId, md.checkAccountPayload (req, res, next) => {
+router.post(
+  "/",
+  md.checkAccountPayload, md.checkAccountNameUnique,
+  (req, res, next) => {
+    // DO YOUR MAGIC
+    const { name, budget } = req.body;
+    Account.create({
+      name: name.trim(),
+      budget: budget,
+    })
+      .then((newAccount) => {
+        res.status(201).json(newAccount);
+      })
+      .catch((err) => {
+        next(err);
+      });
+  }
+);
+
+router.put('/:id', md.checkAccountId, md.checkAccountPayload, md.checkAccountNameUnique, async (req, res, next) => {
  
-})
-
-router.put('/:id', (req, res, next) => {
-  // DO YOUR MAGIC
+ try{
+  const updated = await Account.updateById(req.params.id, req.body)
+  res.json(updated)
+ }catch(err){
+  next(err)
+ }
 });
 
-router.delete('/:id', (req, res, next) => {
-  // DO YOUR MAGIC
+router.delete('/:id', md.checkAccountId,async(req, res, next) => {
+try{
+await Account.deleteById(req.params.id)
+res.json(req.account)
+}catch(err){
+  next(err)
+}
 })
 
 router.use((err, req, res, next) => { // eslint-disable-line
